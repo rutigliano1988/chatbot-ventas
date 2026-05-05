@@ -1,14 +1,47 @@
-// Modelo: Consulta
-// Guarda preguntas que el bot no pudo responder
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-// Campos:
-// - id
-// - negocioId (FK -> Negocio)
-// - clienteId (FK -> Cliente)
-// - pregunta (texto del cliente)
-// - respuesta (texto de la respuesta del dueno, si ya respondio)
-// - estado (pendiente | respondida)
-// - creadaEn
-// - respondidaEn
+const Consulta = sequelize.define('Consulta', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  negocioId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'negocios', key: 'id' }
+  },
+  clienteId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'clientes', key: 'id' }
+  },
+  pregunta: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  respuesta: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  estado: {
+    type: DataTypes.ENUM('pendiente', 'respondida'),
+    allowNull: false,
+    defaultValue: 'pendiente'
+  },
+  creadaEn: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
+  respondidaEn: {
+    type: DataTypes.DATE,
+    allowNull: true
+  }
+}, {
+  tableName: 'consultas',
+  timestamps: false
+});
 
-module.exports = {}; // TODO: Definir con Sequelize
+module.exports = Consulta;

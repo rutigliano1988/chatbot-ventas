@@ -1,17 +1,41 @@
 const axios = require('axios');
 
-const BASE_URL = `https://graph.facebook.com/v17.0/${process.env.WHATSAPP_PHONE_ID}`;
+const GRAPH_URL = 'https://graph.facebook.com/v18.0';
 
-// Enviar mensaje de texto simple
-async function enviarMensaje(numeroDestino, texto) {
-  // TODO: Implementar envio real
-  console.log(`Enviando a ${numeroDestino}: ${texto}`);
+async function enviarMensaje(telefono, texto) {
+  await axios.post(
+    `${GRAPH_URL}/${process.env.WHATSAPP_PHONE_ID}/messages`,
+    {
+      messaging_product: 'whatsapp',
+      to: telefono,
+      type: 'text',
+      text: { body: texto }
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
 }
 
-// Enviar menu de opciones
-async function enviarMenu(numeroDestino, nombreNegocio) {
-  const mensaje = `Hola, bienvenido a ${nombreNegocio}. Que necesitas?\n\n1️⃣ Ver horarios y ubicacion\n2️⃣ Hacer una reserva\n3️⃣ Ver servicios/menu\n4️⃣ Otra consulta`;
-  return enviarMensaje(numeroDestino, mensaje);
+// Extrae los datos relevantes del payload que envía Meta al webhook
+function extraerDatosMensaje(payload) {
+  try {
+    const value = payload?.entry?.[0]?.changes?.[0]?.value;
+    const mensaje = value?.messages?.[0];
+
+    if (!mensaje || mensaje.type !== 'text') return null;
+
+    return {
+      telefono: mensaje.from,
+      texto: mensaje.text.body.trim(),
+      nombre: value.contacts?.[0]?.profile?.name || null
+    };
+  } catch {
+    return null;
+  }
 }
 
-module.exports = { enviarMensaje, enviarMenu };
+module.exports = { enviarMensaje, extraerDatosMensaje };
