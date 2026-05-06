@@ -34,8 +34,9 @@ async function verificarDisponibilidad(refreshToken, calendarId, fecha, hora) {
   const auth     = crearClienteOAuth(refreshToken);
   const calendar = google.calendar({ version: 'v3', auth });
 
-  const timeMin = rfc3339(fecha, hora);
-  const timeMax = rfc3339(fecha, horaFin(hora, DURACION_MIN));
+  const horaStr  = hora.substring(0, 5); // normaliza "20:00:00" → "20:00"
+  const timeMin  = rfc3339(fecha, horaStr);
+  const timeMax  = rfc3339(fecha, horaFin(horaStr, DURACION_MIN));
   const id      = calendarId || 'primary';
 
   const { data } = await calendar.freebusy.query({
@@ -50,6 +51,7 @@ async function crearEvento(refreshToken, calendarId, { clienteNombre, clienteTel
   const auth     = crearClienteOAuth(refreshToken);
   const calendar = google.calendar({ version: 'v3', auth });
 
+  const horaStr    = hora.substring(0, 5); // normaliza "20:00:00" → "20:00"
   const descripcion = [`Tel: ${clienteTelefono}`, observaciones ? `Obs: ${observaciones}` : null]
     .filter(Boolean).join('\n');
 
@@ -58,8 +60,8 @@ async function crearEvento(refreshToken, calendarId, { clienteNombre, clienteTel
     requestBody: {
       summary:     `Reserva — ${clienteNombre || clienteTelefono} (${personas} ${personas === 1 ? 'persona' : 'personas'})`,
       description: descripcion,
-      start: { dateTime: rfc3339(fecha, hora), timeZone: TIMEZONE },
-      end:   { dateTime: rfc3339(fecha, horaFin(hora, DURACION_MIN)), timeZone: TIMEZONE },
+      start: { dateTime: rfc3339(fecha, horaStr), timeZone: TIMEZONE },
+      end:   { dateTime: rfc3339(fecha, horaFin(horaStr, DURACION_MIN)), timeZone: TIMEZONE },
       colorId: '2' // verde
     }
   });
