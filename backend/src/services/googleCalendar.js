@@ -56,19 +56,21 @@ async function crearEvento(refreshToken, calendarId, { clienteNombre, clienteTel
   const auth     = crearClienteOAuth(refreshToken);
   const calendar = google.calendar({ version: 'v3', auth });
 
-  const horaStr    = hora.substring(0, 5); // normaliza "20:00:00" → "20:00"
-  const descripcion = [`Tel: ${clienteTelefono}`, observaciones ? `Obs: ${observaciones}` : null]
-    .filter(Boolean).join('\n');
+  const horaStr  = String(hora).substring(0, 5);
+  const startDT  = rfc3339(fecha, horaStr);
+  const endDT    = rfc3339(fecha, horaFin(horaStr, DURACION_MIN));
+
+  const requestBody = {
+    summary: `Reserva - ${clienteNombre || clienteTelefono}`,
+    start:   { dateTime: startDT },
+    end:     { dateTime: endDT }
+  };
+
+  console.log('[Calendar] Request:', JSON.stringify({ calendarId: calendarId || 'primary', requestBody }));
 
   const { data } = await calendar.events.insert({
     calendarId: calendarId || 'primary',
-    requestBody: {
-      summary:     `Reserva - ${clienteNombre || clienteTelefono} (${personas} ${personas === 1 ? 'persona' : 'personas'})`,
-      description: descripcion,
-      start: { dateTime: rfc3339(fecha, horaStr) },
-      end:   { dateTime: rfc3339(fecha, horaFin(horaStr, DURACION_MIN)) },
-      colorId: '2'
-    }
+    requestBody
   });
 
   return data.id;
