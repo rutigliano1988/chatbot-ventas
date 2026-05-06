@@ -63,11 +63,11 @@ async function crearEvento(refreshToken, calendarId, { clienteNombre, clienteTel
   const { data } = await calendar.events.insert({
     calendarId: calendarId || 'primary',
     requestBody: {
-      summary:     `Reserva — ${clienteNombre || clienteTelefono} (${personas} ${personas === 1 ? 'persona' : 'personas'})`,
+      summary:     `Reserva - ${clienteNombre || clienteTelefono} (${personas} ${personas === 1 ? 'persona' : 'personas'})`,
       description: descripcion,
-      start: { dateTime: rfc3339(fecha, horaStr), timeZone: TIMEZONE },
-      end:   { dateTime: rfc3339(fecha, horaFin(horaStr, DURACION_MIN)), timeZone: TIMEZONE },
-      colorId: '2' // verde
+      start: { dateTime: rfc3339(fecha, horaStr) },
+      end:   { dateTime: rfc3339(fecha, horaFin(horaStr, DURACION_MIN)) },
+      colorId: '2'
     }
   });
 
