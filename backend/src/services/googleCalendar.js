@@ -22,9 +22,14 @@ function horaFin(hora, minutos) {
   return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
+function fechaStr(fecha) {
+  // Garantiza formato YYYY-MM-DD tanto si llega string como Date object
+  if (typeof fecha === 'string') return fecha.substring(0, 10);
+  return fecha.toISOString().substring(0, 10);
+}
+
 function rfc3339(fecha, hora) {
-  // Devuelve "2025-06-15T20:00:00-03:00"
-  return `${fecha}T${hora}:00${TZ_OFFSET}`;
+  return `${fechaStr(fecha)}T${hora}:00${TZ_OFFSET}`;
 }
 
 // ── API pública ───────────────────────────────────────────
