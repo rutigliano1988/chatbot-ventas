@@ -79,13 +79,13 @@ function menuSalida() {
 async function manejarFecha(telefono, texto, negocio) {
   const fecha = parsearFecha(texto);
   if (!fecha) {
-    await enviarMensaje(telefono, '❌ No entendí la fecha. Usá el formato *DD/MM*\nEjemplo: *15/06*');
+    await enviarMensaje(telefono, '❌ No entendí la fecha. Usa el formato *DD/MM*\nEjemplo: *15/06*');
     return;
   }
   if (!diaEstaAbierto(fecha, negocio.horarios)) {
     const key = DIAS_KEY[fecha.getDay()];
     const dia = key.charAt(0).toUpperCase() + key.slice(1);
-    await enviarMensaje(telefono, `❌ Los ${dia}s estamos cerrados. Por favor elegí otro día.`);
+    await enviarMensaje(telefono, `❌ Los ${dia}s estamos cerrados. Por favor elige otro día.`);
     return;
   }
 
@@ -101,7 +101,7 @@ async function manejarFecha(telefono, texto, negocio) {
 async function manejarHora(telefono, texto, negocio) {
   const hora = parsearHora(texto);
   if (!hora) {
-    await enviarMensaje(telefono, '❌ No entendí la hora. Usá el formato *HH:MM*\nEjemplo: *20:00*');
+    await enviarMensaje(telefono, '❌ No entendí la hora. Usa el formato *HH:MM*\nEjemplo: *20:00*');
     return;
   }
 
@@ -146,7 +146,7 @@ async function manejarPersonas(telefono, texto) {
 
   await enviarMensaje(
     telefono,
-    '📝 ¿Alguna observación especial?\n(alergias, ocasión especial, silla para bebé, etc.)\n\nSi no tenés ninguna, escribí *no*.'
+    '📝 ¿Alguna observación especial?\n(alergias, ocasión especial, silla para bebé, etc.)\n\nSi no tienes ninguna, escribe *no*.'
   );
 }
 
@@ -164,7 +164,7 @@ async function manejarObservaciones(telefono, texto) {
 
   await enviarMensaje(
     telefono,
-    `*Resumen de tu reserva:*\n\n📅 ${fechaDisplay}\n⏰ ${hora} hs\n👥 ${personas} ${personas === 1 ? 'persona' : 'personas'}\n${linea}\n¿Confirmás? Respondé *SI* o *NO*`
+    `*Resumen de tu reserva:*\n\n📅 ${fechaDisplay}\n⏰ ${hora} h\n👥 ${personas} ${personas === 1 ? 'persona' : 'personas'}\n${linea}\n¿Confirmas? Responde *SI* o *NO*`
   );
 }
 
@@ -189,7 +189,7 @@ async function manejarConfirmacion(telefono, texto, negocio, clienteId) {
 
     await enviarMensaje(
       telefono,
-      `✅ *¡Reserva confirmada!*\n\nTe esperamos el *${fechaDisplay}* a las *${hora} hs*.\n\nEn breve te confirmamos por este medio.\nPara cambios escribinos al ${negocio.telefonoNotificaciones || negocio.telefono}. 🙌`
+      `✅ *¡Reserva confirmada!*\n\nTe esperamos el *${fechaDisplay}* a las *${hora} h*.\n\nEn breve te confirmamos por este medio.\nPara cambios escríbenos al ${negocio.telefonoNotificaciones || negocio.telefono}. 🙌`
     );
 
     // Notificar al dueño sin bloquear la respuesta al cliente
@@ -203,7 +203,7 @@ async function manejarConfirmacion(telefono, texto, negocio, clienteId) {
     await enviarMensaje(telefono, `❌ Reserva cancelada.\n\n¿En qué más puedo ayudarte?\n${menuSalida()}`);
 
   } else {
-    await enviarMensaje(telefono, 'Respondé *SI* para confirmar o *NO* para cancelar.');
+    await enviarMensaje(telefono, 'Responde *SI* para confirmar o *NO* para cancelar.');
   }
 }
 
@@ -213,7 +213,7 @@ async function iniciarFlujo(telefono, negocio) {
   setEstado(telefono, { paso: 'fecha', datos: {} });
   await enviarMensaje(
     telefono,
-    `📅 ¡Genial! Vamos a hacer tu reserva en *${negocio.nombre}*.\n\n¿Para qué fecha la querés?\nEjemplo: *15/06*\n\nEscribí *cancelar* en cualquier momento para salir.`
+    `📅 ¡Genial! Vamos a hacer tu reserva en *${negocio.nombre}*.\n\n¿Para qué fecha la quieres?\nEjemplo: *15/06*\n\nEscribe *cancelar* en cualquier momento para salir.`
   );
 }
 

@@ -37,7 +37,7 @@ async function notificarNuevaReserva(emailDueno, { negocioNombre, clienteNombre,
     <p><strong>Personas:</strong> ${personas}</p>
     ${obs}
     <hr>
-    <p>Para confirmar o cancelar la reserva ingresá al panel de administración.</p>
+    <p>Para confirmar o cancelar la reserva, accede al panel de administración.</p>
     `
   );
 }
@@ -52,7 +52,7 @@ async function notificarNuevaConsulta(emailDueno, { negocioNombre, clienteNombre
     <p><strong>Teléfono:</strong> <a href="https://wa.me/${clienteTelefono}">${clienteTelefono}</a></p>
     <blockquote style="border-left:4px solid #ccc;padding-left:12px;color:#555">${pregunta}</blockquote>
     <hr>
-    <p>Respondé desde el panel para que el cliente reciba tu respuesta por WhatsApp.</p>
+    <p>Responde desde el panel para que el cliente reciba tu respuesta por WhatsApp.</p>
     `
   );
 }

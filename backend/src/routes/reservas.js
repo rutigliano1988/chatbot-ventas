@@ -68,8 +68,7 @@ router.put('/:id', async (req, res) => {
         });
         await reserva.update({ googleEventId: eventoId });
       } catch (calErr) {
-        console.error('[Calendar] Error al crear evento:', calErr.message, JSON.stringify(calErr.response?.data || {}));
-        console.error('[Calendar] Datos enviados — fecha:', reserva.fecha, '| hora:', reserva.hora, '| calendarId:', negocio.googleCalendarId);
+        console.error('[Calendar] Error al crear evento:', calErr.message);
       }
     }
 

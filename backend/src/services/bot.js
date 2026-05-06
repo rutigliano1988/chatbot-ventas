@@ -25,7 +25,7 @@ function detectarIntencion(texto) {
 
 function formatearHorarios(horarios, negocio) {
   if (!horarios || Object.keys(horarios).length === 0) {
-    return `Para conocer nuestros horarios, contactanos al ${negocio.telefonoNotificaciones || negocio.telefono}.`;
+    return `Para conocer nuestros horarios, contáctanos al ${negocio.telefonoNotificaciones || negocio.telefono}.`;
   }
 
   const lineas = DIAS.map(dia => {
@@ -41,7 +41,7 @@ function formatearInfo(negocio) {
   const info = negocio.infoEspecifica;
 
   if (!info || Object.keys(info).length === 0) {
-    return `Para conocer nuestros servicios, contactanos al ${negocio.telefonoNotificaciones || negocio.telefono}.`;
+    return `Para conocer nuestros servicios, contáctanos al ${negocio.telefonoNotificaciones || negocio.telefono}.`;
   }
 
   const partes = [`📋 *${negocio.nombre}*`];
@@ -68,7 +68,7 @@ async function procesarMensaje(telefono, nombreContacto, texto) {
 
   const negocio = await Negocio.findByPk(NEGOCIO_ID);
   if (!negocio) {
-    await enviarMensaje(telefono, '¡Hola! Estamos configurando nuestro sistema. Volvé a escribirnos en unos minutos.');
+    await enviarMensaje(telefono, '¡Hola! Estamos configurando nuestro sistema. Vuelve a escribirnos en unos minutos.');
     return;
   }
 
