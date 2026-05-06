@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 
-const TIMEZONE        = process.env.CALENDAR_TIMEZONE || 'America/Argentina/Buenos_Aires';
-const TZ_OFFSET       = process.env.CALENDAR_TZ_OFFSET || '-03:00';
+const TIMEZONE        = 'America/Argentina/Buenos_Aires';
+const TZ_OFFSET       = '-03:00';
 const DURACION_MIN    = parseInt(process.env.RESERVA_DURACION_MINUTOS) || 90;
 
 // ── Helpers ───────────────────────────────────────────────
