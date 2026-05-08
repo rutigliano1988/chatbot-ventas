@@ -3,6 +3,7 @@ const Cliente = require('./Cliente');
 const Negocio = require('./Negocio');
 const Reserva = require('./Reserva');
 const Consulta = require('./Consulta');
+const ConversacionEstado = require('./ConversacionEstado');
 
 // Negocio tiene muchos Clientes a través de Reservas y Consultas
 Negocio.hasMany(Reserva, { foreignKey: 'negocioId', as: 'reservas' });
@@ -17,4 +18,4 @@ Reserva.belongsTo(Cliente, { foreignKey: 'clienteId', as: 'cliente' });
 Consulta.belongsTo(Negocio, { foreignKey: 'negocioId', as: 'negocio' });
 Consulta.belongsTo(Cliente, { foreignKey: 'clienteId', as: 'cliente' });
 
-module.exports = { sequelize, Cliente, Negocio, Reserva, Consulta };
+module.exports = { sequelize, Cliente, Negocio, Reserva, Consulta, ConversacionEstado };

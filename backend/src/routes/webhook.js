@@ -1,7 +1,36 @@
+const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
 const { extraerDatosMensaje } = require('../services/whatsapp');
 const { procesarMensaje } = require('../services/bot');
+
+function verificarFirma(req, res, next) {
+  const appSecret = process.env.WHATSAPP_APP_SECRET;
+  if (!appSecret) {
+    console.warn('[webhook] WHATSAPP_APP_SECRET no configurado — verificación de firma omitida');
+    return next();
+  }
+
+  const signature = req.headers['x-hub-signature-256'];
+  if (!signature) return res.sendStatus(403);
+
+  const esperada = 'sha256=' + crypto
+    .createHmac('sha256', appSecret)
+    .update(req.rawBody)
+    .digest('hex');
+
+  try {
+    const bufRecibida = Buffer.from(signature);
+    const bufEsperada = Buffer.from(esperada);
+    if (bufRecibida.length !== bufEsperada.length || !crypto.timingSafeEqual(bufRecibida, bufEsperada)) {
+      return res.sendStatus(403);
+    }
+  } catch {
+    return res.sendStatus(403);
+  }
+
+  next();
+}
 
 // GET: Meta verifica el webhook con este endpoint
 router.get('/', (req, res) => {
@@ -17,7 +46,7 @@ router.get('/', (req, res) => {
 });
 
 // POST: Recibe mensajes entrantes de WhatsApp
-router.post('/', async (req, res) => {
+router.post('/', verificarFirma, async (req, res) => {
   // Meta requiere 200 inmediato para no reintentar el envío
   res.sendStatus(200);
 

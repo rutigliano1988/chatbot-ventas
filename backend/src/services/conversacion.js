@@ -1,17 +1,17 @@
-// Estado de conversación en memoria: telefono → { paso, datos }
-// Se pierde al reiniciar el servidor — suficiente para el MVP
-const estados = new Map();
+const { ConversacionEstado } = require('../models');
 
-function getEstado(telefono) {
-  return estados.get(telefono) || null;
+async function getEstado(telefono) {
+  const registro = await ConversacionEstado.findByPk(telefono);
+  if (!registro) return null;
+  return { paso: registro.paso, datos: registro.datos };
 }
 
-function setEstado(telefono, estado) {
-  estados.set(telefono, estado);
+async function setEstado(telefono, estado) {
+  await ConversacionEstado.upsert({ telefono, paso: estado.paso, datos: estado.datos });
 }
 
-function limpiarEstado(telefono) {
-  estados.delete(telefono);
+async function limpiarEstado(telefono) {
+  await ConversacionEstado.destroy({ where: { telefono } });
 }
 
 module.exports = { getEstado, setEstado, limpiarEstado };

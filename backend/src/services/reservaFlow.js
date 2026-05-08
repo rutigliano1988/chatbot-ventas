@@ -89,11 +89,11 @@ async function manejarFecha(telefono, texto, negocio) {
     return;
   }
 
-  const estado = getEstado(telefono);
+  const estado = await getEstado(telefono);
   estado.datos.fecha        = fechaAString(fecha);
   estado.datos.fechaDisplay = formatearFechaDisplay(fecha);
   estado.paso = 'hora';
-  setEstado(telefono, estado);
+  await setEstado(telefono, estado);
 
   await enviarMensaje(telefono, `⏰ ¿A qué hora?\nEjemplo: *20:00*`);
 }
@@ -108,7 +108,7 @@ async function manejarHora(telefono, texto, negocio) {
   // Verificar disponibilidad en Google Calendar si está configurado
   if (negocio.googleRefreshToken && negocio.googleCalendarId) {
     try {
-      const estado = getEstado(telefono);
+      const estado = await getEstado(telefono);
       const disponible = await verificarDisponibilidad(
         negocio.googleRefreshToken,
         negocio.googleCalendarId,
@@ -124,10 +124,10 @@ async function manejarHora(telefono, texto, negocio) {
     }
   }
 
-  const estado = getEstado(telefono);
+  const estado = await getEstado(telefono);
   estado.datos.hora = hora;
   estado.paso = 'personas';
-  setEstado(telefono, estado);
+  await setEstado(telefono, estado);
 
   await enviarMensaje(telefono, '👥 ¿Para cuántas personas?');
 }
@@ -139,10 +139,10 @@ async function manejarPersonas(telefono, texto) {
     return;
   }
 
-  const estado = getEstado(telefono);
+  const estado = await getEstado(telefono);
   estado.datos.personas = personas;
   estado.paso = 'observaciones';
-  setEstado(telefono, estado);
+  await setEstado(telefono, estado);
 
   await enviarMensaje(
     telefono,
@@ -151,13 +151,13 @@ async function manejarPersonas(telefono, texto) {
 }
 
 async function manejarObservaciones(telefono, texto) {
-  const estado   = getEstado(telefono);
+  const estado   = await getEstado(telefono);
   const t        = texto.trim().toLowerCase();
   const obs      = (t === 'no' || t === '-' || t === 'ninguna') ? null : texto.trim();
 
   estado.datos.observaciones = obs;
   estado.paso = 'confirmacion';
-  setEstado(telefono, estado);
+  await setEstado(telefono, estado);
 
   const { fechaDisplay, hora, personas } = estado.datos;
   const linea = obs ? `📝 ${obs}\n` : '';
@@ -172,7 +172,7 @@ async function manejarConfirmacion(telefono, texto, negocio, clienteId) {
   const t = texto.trim().toLowerCase();
 
   if (t === 'si' || t === 'sí' || t === 's') {
-    const estado  = getEstado(telefono);
+    const estado  = await getEstado(telefono);
     const { fecha, hora, personas, observaciones, fechaDisplay } = estado.datos;
 
     const reserva = await Reserva.create({
@@ -185,7 +185,7 @@ async function manejarConfirmacion(telefono, texto, negocio, clienteId) {
       estado:        'pendiente'
     });
 
-    limpiarEstado(telefono);
+    await limpiarEstado(telefono);
 
     await enviarMensaje(
       telefono,
@@ -199,7 +199,7 @@ async function manejarConfirmacion(telefono, texto, negocio, clienteId) {
     );
 
   } else if (t === 'no' || t === 'n') {
-    limpiarEstado(telefono);
+    await limpiarEstado(telefono);
     await enviarMensaje(telefono, `❌ Reserva cancelada.\n\n¿En qué más puedo ayudarte?\n${menuSalida()}`);
 
   } else {
@@ -210,7 +210,7 @@ async function manejarConfirmacion(telefono, texto, negocio, clienteId) {
 // ── API pública ───────────────────────────────────────────
 
 async function iniciarFlujo(telefono, negocio) {
-  setEstado(telefono, { paso: 'fecha', datos: {} });
+  await setEstado(telefono, { paso: 'fecha', datos: {} });
   await enviarMensaje(
     telefono,
     `📅 ¡Genial! Vamos a hacer tu reserva en *${negocio.nombre}*.\n\n¿Para qué fecha la quieres?\nEjemplo: *15/06*\n\nEscribe *cancelar* en cualquier momento para salir.`
@@ -219,14 +219,14 @@ async function iniciarFlujo(telefono, negocio) {
 
 // Devuelve true si el mensaje fue manejado por el flujo
 async function procesarPaso(telefono, texto, negocio, clienteId) {
-  const estado = getEstado(telefono);
+  const estado = await getEstado(telefono);
   if (!estado) return false;
 
   const t = texto.trim().toLowerCase();
 
   // Salida en cualquier paso
   if (t === 'cancelar' || t === '0' || t === 'salir') {
-    limpiarEstado(telefono);
+    await limpiarEstado(telefono);
     await enviarMensaje(telefono, `❌ Reserva cancelada.\n\n¿En qué más puedo ayudarte?\n${menuSalida()}`);
     return true;
   }

@@ -7,22 +7,53 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { sequelize } = require('./models');
+const { requireApiKey } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ── Rate limiters ─────────────────────────────────────────
+// Webhook: generoso — todas las peticiones de clientes llegan desde IPs de Meta
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas peticiones al webhook' },
+});
+
+// Dashboard: más restrictivo — solo lo usa el dueño del negocio
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 150,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas peticiones, intenta más tarde' },
+});
+
 // ── Middlewares de seguridad ──────────────────────────────
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+// verify captura el body crudo antes del parseo — necesario para validar la firma del webhook
+app.use(express.json({
+  verify: (req, _res, buf) => { req.rawBody = buf; },
+}));
 
 // ── Rutas principales ─────────────────────────────────────
-app.use('/webhook', require('./routes/webhook'));
-app.use('/reservas', require('./routes/reservas'));
-app.use('/consultas', require('./routes/consultas'));
-app.use('/negocio', require('./routes/negocio'));
+// /webhook y /auth no requieren API key (las llaman Meta y Google respectivamente)
+app.use('/webhook', webhookLimiter, require('./routes/webhook'));
 app.use('/auth', require('./routes/auth'));
+
+// Rutas del dashboard — requieren API key
+app.use('/reservas', apiLimiter, requireApiKey, require('./routes/reservas'));
+app.use('/consultas', apiLimiter, requireApiKey, require('./routes/consultas'));
+app.use('/negocio', apiLimiter, requireApiKey, require('./routes/negocio'));
 
 // ── Health check ──────────────────────────────────────────
 app.get('/', (req, res) => {
