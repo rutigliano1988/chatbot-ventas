@@ -14,6 +14,9 @@ const { requireApiKey } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Railway (y la mayoría de plataformas cloud) usan un proxy inverso
+app.set('trust proxy', 1);
+
 // ── Rate limiters ─────────────────────────────────────────
 // Webhook: generoso — todas las peticiones de clientes llegan desde IPs de Meta
 const webhookLimiter = rateLimit({
