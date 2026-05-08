@@ -108,10 +108,12 @@ async function manejarHora(telefono, texto, negocio) {
     return;
   }
 
+  const estado = await getEstado(telefono);
+  let capacidadDisponible = null;
+
   // Verificar capacidad disponible consultando la base de datos
   if (negocio.capacidadTotal) {
     try {
-      const estado = await getEstado(telefono);
       const personasReservadas = await Reserva.sum('personas', {
         where: {
           negocioId: NEGOCIO_ID,
@@ -121,7 +123,9 @@ async function manejarHora(telefono, texto, negocio) {
         }
       }) || 0;
 
-      if (personasReservadas >= negocio.capacidadTotal) {
+      capacidadDisponible = negocio.capacidadTotal - personasReservadas;
+
+      if (capacidadDisponible <= 0) {
         await enviarMensaje(telefono, '❌ Lo sentimos, ese horario está completo. Por favor elegí otra hora.\nEjemplo: *21:00*');
         return;
       }
@@ -130,8 +134,8 @@ async function manejarHora(telefono, texto, negocio) {
     }
   }
 
-  const estado = await getEstado(telefono);
   estado.datos.hora = hora;
+  estado.datos.capacidadDisponible = capacidadDisponible;
   estado.paso = 'personas';
   await setEstado(telefono, estado);
 
@@ -146,6 +150,16 @@ async function manejarPersonas(telefono, texto) {
   }
 
   const estado = await getEstado(telefono);
+  const { capacidadDisponible } = estado.datos;
+
+  if (capacidadDisponible !== null && personas > capacidadDisponible) {
+    await enviarMensaje(
+      telefono,
+      `❌ Lo sentimos, solo quedan *${capacidadDisponible}* lugares disponibles para ese horario. ¿Para cuántas personas sería?`
+    );
+    return;
+  }
+
   estado.datos.personas = personas;
   estado.paso = 'observaciones';
   await setEstado(telefono, estado);
