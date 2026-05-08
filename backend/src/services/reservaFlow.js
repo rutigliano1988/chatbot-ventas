@@ -1,8 +1,8 @@
+const { Op } = require('sequelize');
 const { getEstado, setEstado, limpiarEstado } = require('./conversacion');
 const { Reserva, Cliente, Negocio } = require('../models');
 const { enviarMensaje } = require('./whatsapp');
 const { notificarReserva } = require('./notificaciones');
-const { verificarDisponibilidad } = require('./googleCalendar');
 
 const NEGOCIO_ID = parseInt(process.env.NEGOCIO_ID) || 1;
 
@@ -108,18 +108,21 @@ async function manejarHora(telefono, texto, negocio) {
     return;
   }
 
-  // Verificar disponibilidad en Google Calendar si está configurado
-  if (negocio.googleRefreshToken && negocio.googleCalendarId) {
+  // Verificar capacidad disponible consultando la base de datos
+  if (negocio.capacidadTotal) {
     try {
       const estado = await getEstado(telefono);
-      const disponible = await verificarDisponibilidad(
-        negocio.googleRefreshToken,
-        negocio.googleCalendarId,
-        estado.datos.fecha,
-        hora
-      );
-      if (!disponible) {
-        await enviarMensaje(telefono, '❌ Ese horario ya está ocupado. Por favor elegí otra hora.\nEjemplo: *21:00*');
+      const personasReservadas = await Reserva.sum('personas', {
+        where: {
+          negocioId: NEGOCIO_ID,
+          fecha:     estado.datos.fecha,
+          hora,
+          estado:    { [Op.in]: ['pendiente', 'confirmada'] }
+        }
+      }) || 0;
+
+      if (personasReservadas >= negocio.capacidadTotal) {
+        await enviarMensaje(telefono, '❌ Lo sentimos, ese horario está completo. Por favor elegí otra hora.\nEjemplo: *21:00*');
         return;
       }
     } catch {
