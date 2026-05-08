@@ -126,7 +126,7 @@ async function manejarHora(telefono, texto, negocio) {
       capacidadDisponible = negocio.capacidadTotal - personasReservadas;
 
       if (capacidadDisponible <= 0) {
-        await enviarMensaje(telefono, '❌ Lo sentimos, ese horario está completo. Por favor elegí otra hora.\nEjemplo: *21:00*');
+        await enviarMensaje(telefono, '❌ Lo sentimos, ese horario está completo. Por favor elige otra hora.\nEjemplo: *21:00*');
         return;
       }
     } catch {
@@ -145,7 +145,7 @@ async function manejarHora(telefono, texto, negocio) {
 async function manejarPersonas(telefono, texto) {
   const personas = parsearPersonas(texto);
   if (!personas) {
-    await enviarMensaje(telefono, '❌ Ingresá un número entre 1 y 30.');
+    await enviarMensaje(telefono, '❌ Introduce un número entre 1 y 30.');
     return;
   }
 

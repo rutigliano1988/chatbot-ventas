@@ -56,7 +56,7 @@ async function notificarConsulta(negocio, cliente, consulta) {
     await intentar(() =>
       enviarMensaje(
         negocio.telefonoNotificaciones,
-        `💬 *Nueva consulta*\n\n👤 ${datos.clienteNombre || datos.clienteTelefono}\n📞 ${datos.clienteTelefono}\n\n"${datos.pregunta}"\n\nRespondé desde el panel para que reciba tu respuesta por WhatsApp.`
+        `💬 *Nueva consulta*\n\n👤 ${datos.clienteNombre || datos.clienteTelefono}\n📞 ${datos.clienteTelefono}\n\n"${datos.pregunta}"\n\nResponde desde el panel para que reciba tu respuesta por WhatsApp.`
       ),
     'WhatsApp consulta al dueño');
   }

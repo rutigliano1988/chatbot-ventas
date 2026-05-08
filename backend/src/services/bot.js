@@ -110,7 +110,7 @@ async function procesarMensaje(telefono, nombreContacto, texto) {
       });
       await enviarMensaje(
         telefono,
-        `Gracias por tu mensaje. Le avisamos al equipo de *${negocio.nombre}* y te respondemos a la brevedad. 🙏`
+        `Gracias por tu mensaje. Avisaremos al equipo de *${negocio.nombre}* y te responderemos en breve. 🙏`
       );
       // Notificar al dueño sin bloquear la respuesta al cliente
       notificarConsulta(negocio, cliente, consulta).catch(err =>

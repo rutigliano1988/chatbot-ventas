@@ -101,7 +101,7 @@ export default function Configuracion() {
       }
       setMensaje({ tipo: 'ok', texto: '✅ Configuración guardada correctamente.' });
     } catch {
-      setMensaje({ tipo: 'error', texto: '❌ Error al guardar. Revisá los datos e intentá de nuevo.' });
+      setMensaje({ tipo: 'error', texto: '❌ Error al guardar. Revisa los datos e inténtalo de nuevo.' });
     } finally {
       setGuardando(false);
       setTimeout(() => setMensaje(null), 4000);
