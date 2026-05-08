@@ -73,7 +73,7 @@ async function procesarMensaje(telefono, nombreContacto, texto) {
   }
 
   // Si el usuario está en medio de un flujo de reserva, delegamos al flujo
-  if (getEstado(telefono)) {
+  if (await getEstado(telefono)) {
     await procesarPaso(telefono, texto, negocio, cliente.id);
     return;
   }
