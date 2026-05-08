@@ -7,10 +7,22 @@ const DIA_LABEL = {
   jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo'
 };
 
+// Normaliza el formato antiguo { apertura, cierre } al nuevo [{ apertura, cierre }]
+function normalizarHorarios(horarios) {
+  return Object.fromEntries(DIAS.map(dia => {
+    const h = horarios?.[dia];
+    if (!h) return [dia, null];
+    if (Array.isArray(h)) return [dia, h];
+    return [dia, [h]];
+  }));
+}
+
+const HORARIOS_VACIO = Object.fromEntries(DIAS.map(d => [d, null]));
+
 const NEGOCIO_VACIO = {
   nombre: '', descripcion: '', direccion: '', telefono: '',
   emailNotificaciones: '', telefonoNotificaciones: '', capacidadTotal: '',
-  horarios: Object.fromEntries(DIAS.map(d => [d, null])),
+  horarios: HORARIOS_VACIO,
   infoEspecifica: { menu: '', servicios: '', precios: '' }
 };
 
@@ -26,11 +38,11 @@ export default function Configuracion() {
         setNegocio({
           ...NEGOCIO_VACIO,
           ...data,
-          horarios: { ...NEGOCIO_VACIO.horarios, ...(data.horarios || {}) },
+          horarios: normalizarHorarios(data.horarios),
           infoEspecifica: { ...NEGOCIO_VACIO.infoEspecifica, ...(data.infoEspecifica || {}) }
         });
       })
-      .catch(() => {}) // si no existe negocio, usa el vacío
+      .catch(() => {})
       .finally(() => setCargando(false));
   }, []);
 
@@ -46,12 +58,31 @@ export default function Configuracion() {
 
   const toggleDia = (dia, abierto) => setNegocio(p => ({
     ...p,
-    horarios: { ...p.horarios, [dia]: abierto ? { apertura: '09:00', cierre: '18:00' } : null }
+    horarios: { ...p.horarios, [dia]: abierto ? [{ apertura: '09:00', cierre: '18:00' }] : null }
   }));
 
-  const cambiarHora = (dia, campo, valor) => setNegocio(p => ({
+  const cambiarTurno = (dia, idx, campo, valor) => setNegocio(p => ({
     ...p,
-    horarios: { ...p.horarios, [dia]: { ...p.horarios[dia], [campo]: valor } }
+    horarios: {
+      ...p.horarios,
+      [dia]: p.horarios[dia].map((t, i) => i === idx ? { ...t, [campo]: valor } : t)
+    }
+  }));
+
+  const agregarTurno = (dia) => setNegocio(p => ({
+    ...p,
+    horarios: {
+      ...p.horarios,
+      [dia]: [...p.horarios[dia], { apertura: '09:00', cierre: '18:00' }]
+    }
+  }));
+
+  const eliminarTurno = (dia, idx) => setNegocio(p => ({
+    ...p,
+    horarios: {
+      ...p.horarios,
+      [dia]: p.horarios[dia].filter((_, i) => i !== idx)
+    }
   }));
 
   const guardar = async () => {
@@ -62,7 +93,6 @@ export default function Configuracion() {
         ...negocio,
         capacidadTotal: negocio.capacidadTotal ? parseInt(negocio.capacidadTotal) : null
       };
-      // Si el negocio ya existe usamos PUT, si no existe usamos POST
       try {
         await api.put('/negocio', payload);
       } catch (e) {
@@ -130,8 +160,8 @@ export default function Configuracion() {
       {/* ── Horarios ── */}
       <Seccion titulo="Horarios de atención">
         {DIAS.map(dia => {
-          const h = negocio.horarios?.[dia];
-          const abierto = !!h;
+          const turnos = negocio.horarios?.[dia];
+          const abierto = !!turnos;
           return (
             <div key={dia} style={styles.filaDia}>
               <div style={styles.labelDia}>{DIA_LABEL[dia]}</div>
@@ -147,18 +177,26 @@ export default function Configuracion() {
                 </span>
               </label>
               {abierto && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
-                    type="time" value={h.apertura}
-                    onChange={e => cambiarHora(dia, 'apertura', e.target.value)}
-                    style={styles.inputHora}
-                  />
-                  <span style={{ color: '#64748b', fontSize: 13 }}>a</span>
-                  <input
-                    type="time" value={h.cierre}
-                    onChange={e => cambiarHora(dia, 'cierre', e.target.value)}
-                    style={styles.inputHora}
-                  />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {turnos.map((turno, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input
+                        type="time" value={turno.apertura}
+                        onChange={e => cambiarTurno(dia, idx, 'apertura', e.target.value)}
+                        style={styles.inputHora}
+                      />
+                      <span style={{ color: '#64748b', fontSize: 13 }}>a</span>
+                      <input
+                        type="time" value={turno.cierre}
+                        onChange={e => cambiarTurno(dia, idx, 'cierre', e.target.value)}
+                        style={styles.inputHora}
+                      />
+                      {turnos.length > 1 && (
+                        <button onClick={() => eliminarTurno(dia, idx)} style={styles.btnEliminar}>✕</button>
+                      )}
+                    </div>
+                  ))}
+                  <button onClick={() => agregarTurno(dia)} style={styles.btnTurno}>+ Turno</button>
                 </div>
               )}
             </div>
@@ -216,13 +254,15 @@ function Fila({ label, children }) {
 }
 
 const styles = {
-  titulo:      { fontSize: 22, fontWeight: 800, color: '#1e293b', marginBottom: 28 },
+  titulo:        { fontSize: 22, fontWeight: 800, color: '#1e293b', marginBottom: 28 },
   seccionTitulo: { fontSize: 14, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 },
-  seccionBody: { background: 'white', borderRadius: 10, padding: '20px 24px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' },
-  label:       { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 5 },
-  input:       { width: '100%', padding: '9px 12px', border: '1px solid #cbd5e1', borderRadius: 7, fontSize: 14, color: '#1e293b', background: '#fafafa' },
-  inputHora:   { padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13, color: '#1e293b' },
-  filaDia:     { display: 'flex', alignItems: 'center', gap: 16, padding: '8px 0', borderBottom: '1px solid #f1f5f9' },
-  labelDia:    { width: 100, fontSize: 14, fontWeight: 600, color: '#374151' },
-  toggleLabel: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', minWidth: 90 },
+  seccionBody:   { background: 'white', borderRadius: 10, padding: '20px 24px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' },
+  label:         { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 5 },
+  input:         { width: '100%', padding: '9px 12px', border: '1px solid #cbd5e1', borderRadius: 7, fontSize: 14, color: '#1e293b', background: '#fafafa' },
+  inputHora:     { padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13, color: '#1e293b' },
+  filaDia:       { display: 'flex', alignItems: 'flex-start', gap: 16, padding: '10px 0', borderBottom: '1px solid #f1f5f9' },
+  labelDia:      { width: 100, fontSize: 14, fontWeight: 600, color: '#374151', paddingTop: 6 },
+  toggleLabel:   { display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, cursor: 'pointer', minWidth: 90, paddingTop: 4 },
+  btnTurno:      { fontSize: 12, color: '#0ea5e9', background: 'none', border: '1px dashed #0ea5e9', borderRadius: 5, padding: '3px 10px', cursor: 'pointer', alignSelf: 'flex-start' },
+  btnEliminar:   { fontSize: 12, color: '#ef4444', background: 'none', border: '1px solid #fca5a5', borderRadius: 5, padding: '3px 8px', cursor: 'pointer' },
 };

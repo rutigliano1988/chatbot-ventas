@@ -67,7 +67,10 @@ function fechaAString(fecha) {
 function diaEstaAbierto(fecha, horarios) {
   if (!horarios || Object.keys(horarios).length === 0) return true;
   const key = DIAS_KEY[fecha.getDay()];
-  return !!horarios[key];
+  const h = horarios[key];
+  if (!h) return false;
+  if (Array.isArray(h)) return h.length > 0;
+  return true;
 }
 
 function menuSalida() {

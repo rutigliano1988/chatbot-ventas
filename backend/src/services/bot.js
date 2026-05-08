@@ -31,7 +31,10 @@ function formatearHorarios(horarios, negocio) {
   const lineas = DIAS.map(dia => {
     const h      = horarios[dia];
     const nombre = dia.charAt(0).toUpperCase() + dia.slice(1);
-    return h ? `${nombre}: ${h.apertura} - ${h.cierre}` : `${nombre}: Cerrado`;
+    if (!h) return `${nombre}: Cerrado`;
+    const turnos = Array.isArray(h) ? h : [h];
+    const rangos = turnos.map(t => `${t.apertura} - ${t.cierre}`).join(' y ');
+    return `${nombre}: ${rangos}`;
   });
 
   return `⏰ *Horarios de ${negocio.nombre}*\n\n${lineas.join('\n')}${negocio.direccion ? `\n\n📍 ${negocio.direccion}` : ''}`;
